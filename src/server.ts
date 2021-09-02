@@ -1,12 +1,9 @@
-import express from "express"
-import cors from "cors"
 import { createServer } from "http"
 import { Server } from "socket.io"
-
-// Initializing the express server
-const app = express()
-app.use(cors())
-app.use(express.json())
+import app from "./app"
+import { RoomsModel } from "./services/rooms/model"
+import { shared } from "./shared"
+import { SocketLogin, SocketSendMessage } from "./typings"
 
 // Passing it to a Http Server
 const server = createServer(app)
@@ -14,9 +11,7 @@ const server = createServer(app)
 //Instantiating the io server using the http server. We can't pass the app here
 const io = new Server(server, { allowEIO3: true })
 
-let onlineUsers = []
-
-// adding "event listeners" 
+// adding "event listeners"
 io.on("connection", socket => {
     console.log(socket.id)
 
@@ -26,9 +21,8 @@ io.on("connection", socket => {
     //Emit to everyone, including this client
     // io.sockets.emit("alive", "the server is alive")
 
-
-    socket.on("login", ({ username, room }) => {
-        onlineUsers.push({ username, id: socket.id, room })
+    socket.on("login", ({ username, room }: SocketLogin) => {
+        shared.onlineUsers.push({ username, id: socket.id, room })
 
         socket.join(room)
         console.log(socket.rooms)
@@ -38,24 +32,22 @@ io.on("connection", socket => {
         socket.emit("loggedin")
     })
 
-    socket.on("sendmessage", ({ message, room }) => {
+    socket.on("sendmessage", async ({ message, room }: SocketSendMessage) => {
+
+        // we want to save the message in the correct room
+
+        await RoomsModel.findOneAndUpdate({ name: room }, {
+            $push: { chatHistory: message }
+        })
+
         socket.to(room).emit("message", message)
     })
 
     socket.on("disconnect", () => {
-        console.log("socket disconnected")
-        onlineUsers = onlineUsers.filter(user => user.id !== socket.id)
+        //console.log("socket disconnected")
+        shared.onlineUsers = shared.onlineUsers.filter(user => user.id !== socket.id)
     })
 
 })
 
-app.get('/online-users', (req, res) => {
-    res.send({ onlineUsers })
-})
-
-//server.listen, app.listen will instantiate a new httpServer, unfortunately, without io
-const port = process.env.PORT || 3030
-
-server.listen(port, () => {
-    console.log("Server listening on port " + port)
-})
+export default server
