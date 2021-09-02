@@ -20,11 +20,15 @@ export const MessageSchema = new mongoose.Schema<Message>({
     }
 })
 
+// This is NOT what we are retrieving from the frontend. 
+// This is the description of the object from the DB we are dealing with
+
 export interface IRoom {
     name: string
     chatHistory: Message[]
 }
 
+// Pasing the interface among the <angle brackets> is letting Typescript infer the type of our schema correctly
 export const RoomSchema = new mongoose.Schema<IRoom>({
     name: {
         type: String,

@@ -1,3 +1,6 @@
+// we are only expecting blue or red from the frontend. 
+// Clearly this doesnt exclude the need to specify the Room interface for our DB, see the model for the rooms
+
 export type Room = "blue" | "red"
 
 export interface User {

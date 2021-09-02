@@ -93,6 +93,10 @@ describe("Testing rooms service", () => {
     // })
 
     it("should test that a valid message is a valid message.", () => {
+        // Using a user-defined type-guard function to make sure "validMessage" is implementing the interface
+        // isMessage, unfortunately, can only be created checking the properties by hand.
+
+        // TS is NOT able to check the typing during runtime - Javascript is the only thing running in runtime
         expect(isMessage(validMessage)).toBe(true)
     })
 
@@ -127,6 +131,7 @@ describe("Testing rooms service", () => {
         // Drop dummy db
         mongoose.connection.dropDatabase()
             .then(() => {
+                //Close connections to db, client sockets, server
                 mongoose.connection.close(() => {
                     sender.close()
                     receiver.close()
